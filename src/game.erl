@@ -1,4 +1,4 @@
--module(event).
+-module(game).
 -compile(export_all).
 -record(state, {turn, field=[]}).
 
@@ -11,8 +11,8 @@ dealcards() ->
 dividefour(L) ->
     case length(L) > 4 of
 	true -> {A,B} = lists:split(4,L),
-		[A | dividefour(B)];
-	false -> [L]
+		[lists:sort(A) | dividefour(B)];
+	false -> [lists:sort(L)]
     end.
 
 check(F, P, C, N)->
@@ -27,7 +27,6 @@ replaceElem(L, N, E) ->
 
 toKnown({_,V}) ->
     {known, V}.
-
 
 loop (S = #state{}) ->
     receive
