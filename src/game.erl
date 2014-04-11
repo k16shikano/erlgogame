@@ -28,15 +28,38 @@ replaceElem(L, N, E) ->
 toKnown({_,V}) ->
     {known, V}.
 
+hideUnknown(A) ->
+    lists:map(fun(L) -> 
+		  lists:map(fun ({unknown, _}) ->
+				    {unknown, 0};
+				({known, X}) ->
+				    {known, X}
+			    end, L)
+	      end, A).
+
+get_int(Prompt) ->
+    {N, _} = string:to_integer(io:get_line(Prompt)),
+    N.
+
 loop (S = #state{}) ->
+    P = get_int("Person?? "),
+    C = get_int("Card?? "),
+    N = get_int("Number?? "),
+    self() ! {self(), P, C, N, attack},
     receive
 	{Player, Other, Card, Number, attack} ->
 	    case check(S#state.field, Other, Card, Number) of
 		true -> NField = opencard(S#state.field, Other, Card),
-			Player ! {success, NField},
+			Player ! {success, hideUnknown(NField)},
+			io:format("~w~n", [hideUnknown(NField)]),
 			loop(#state{field=NField});
-		false -> Player ! no,
+		false -> Player ! {no, hideUnknown(S#state.field)},
 			 loop(S)
 	    end
     end.
+
+start() ->
+    F = game:dealcards(),
+    spawn(game,loop,[#state{turn=self(),field=F}]),
+    loop(#state{field=F}).
 
