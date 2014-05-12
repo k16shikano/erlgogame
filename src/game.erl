@@ -95,7 +95,7 @@ loop (S = #state{}) ->
 
     displayField(hideUnknown(S#state.field), 1),
     {P,C} = get_card("Select Card (A-L) ... "),
-    N = get_int("Atack Number (1-8) ... "),
+    N = get_int("Attack Number (1-8) ... "),
 
     self() ! {self(), P, C, N, attack},
     receive
