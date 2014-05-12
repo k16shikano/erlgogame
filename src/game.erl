@@ -3,6 +3,7 @@
 -record(state, {turn, field=[]}).
 
 dealcards() ->
+    random:seed(now()),
     %% even -> white,
     %% odd  -> black.
     L = [{unknown,X} || 
