@@ -22,6 +22,19 @@ check(F, P, C, N)->
     {_, X} = lists:nth(C,(lists:nth(P,F))),
     (X + 1) div 2 == N.
 
+checkGameEnd(F) ->
+    case lists:concat(
+	   lists:map(
+	     fun(L) 
+		-> lists:filter(fun ({unknown, _}) -> true;
+				    ({known, _}) -> false
+				end, L)
+	     end, tl(F)))
+    of
+	[] -> true;
+	_ -> false
+    end.
+
 opencard(F, P, C) ->
     PCards = lists:nth(P, F),
     replaceElem(F, P, replaceElem(PCards, C, toKnown(lists:nth(C, PCards)))).
@@ -94,20 +107,26 @@ displayField(F, U) ->
 loop (S = #state{}) ->
 
     displayField(hideUnknown(S#state.field), 1),
-    {P,C} = get_card("Select Card (A-L) ... "),
-    N = get_int("Attack Number (1-8) ... "),
-
-    self() ! {self(), P, C, N, attack},
-    receive
-	{Player, Other, Card, Number, attack} ->
-	    case check(S#state.field, Other, Card, Number) of
-		true -> NField = opencard(S#state.field, Other, Card),
-			Player ! {success, hideUnknown(NField)},
-			loop(#state{field=NField});
-		false -> Player ! {no, hideUnknown(S#state.field)},
-			 loop(S)
+    case checkGameEnd(hideUnknown(S#state.field)) of
+	true -> io:format("~s\n", [<<"\e[", "31m", "Congratulation!", "\e[", "0m">>]),
+		start();
+	false ->
+	    {P,C} = get_card("Select Card (A-L) ... "),
+	    N = get_int("Attack Number (1-8) ... "),
+	    
+	    self() ! {self(), P, C, N, attack},
+	    receive
+		{Player, Other, Card, Number, attack} ->
+		    case check(S#state.field, Other, Card, Number) of
+			true -> NField = opencard(S#state.field, Other, Card),
+				Player ! {success, hideUnknown(NField)},
+				loop(#state{field=NField});
+			false -> Player ! {no, hideUnknown(S#state.field)},
+				 loop(S)
+		    end
 	    end
     end.
+
 
 start() ->
     F = game:dealcards(),
