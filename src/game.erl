@@ -61,7 +61,10 @@ get_int(Prompt) ->
 
 get_card(Prompt) ->
     N = hd(io:get_line(Prompt)) - 64 + 7,
-    {N div 4, lists:nth(N rem 4 + 1, [4,3,2,1])}.
+    case lists:member(N, lists:seq(8,19)) of
+	true -> {N div 4, lists:nth(N rem 4 + 1, [4,3,2,1])};
+	false -> get_card(Prompt)
+    end.
 
 displayOthersCard({unknown, X}) ->
     if X == 0 ->
